@@ -11,7 +11,7 @@ from datetime import datetime
 import smtplib
 
 
-class backupHelper:
+class BackupHelper:
     def __init__(self,errLogFlile,repoLocation,logFileDir,pollPeriod):
         self.errLogFlile = errLogFlile
         self.repoLocation = repoLocation
@@ -43,10 +43,10 @@ class backupHelper:
 
             server.sendmail("tim.smith361@yahoo.com","lee.hudson1384@gmail.com",message)
             server.quit()
-            logMessage(self.logFileDir,"Email sent ")
+            self.logMessage("Email sent ")
             return 0
         except:
-            logError(self.errLogFlile,"Unable to send email")
+            self.logError("Unable to send email")
             return 1
 
 
@@ -60,7 +60,7 @@ class backupHelper:
             for line in file.readlines():
                 message+=line
             file.close()
-            if sendEmail(os.uname()[1]+" Logfile contents",message,self.errLogFlile,self.logFileDir) == 0:
+            if self.sendEmail(os.uname()[1]+" Logfile contents",message) == 0:
                 os.system("mv "+self.errLogFlile+" "+self.errLogFlile+"_"+now.strftime("%d_%m_%Y__%H_%M_%S"))
         except:
             print "No log file \n"
@@ -84,7 +84,7 @@ class backupHelper:
         message = "mergeConflict() called by " + os.uname()[1] + "\n"
         message += mergeConflictBranch + " created and pushed\n"
         message += "This means something had changed before a pull was done\n"
-        sendEmail(subject,message)
+        self.sendEmail(subject,message)
 
     # Basic commitlogFileDir
     def commit(self):
@@ -97,78 +97,77 @@ class backupHelper:
         result =  Popen(['/usr/bin/git', 'add', '*'],stdout=PIPE,stderr=PIPE,shell=False)
         (out, error) = result.communicate()
         if len(out) > 1:
-            logMessage("commit() performing git add *\n" +out)
+            self.logMessage("commit() performing git add *\n" +out)
         if len(error) > 1:
-            logMessage("commit() performing git add *\n" +error)
+            self.logMessage("commit() performing git add *\n" +error)
 
         # Git commit
         result = Popen(['/usr/bin/git', 'commit', '-m',mergeMessage],stdout=PIPE,stderr=PIPE,shell=False)
         (out, error) = result.communicate()
         if len(out) > 1:
-            logMessage("commit() performing git commit\n" +out)
+            self.logMessage("commit() performing git commit\n" +out)
         if len(error) > 1:
-            logMessage("commit() performing git commit\n" +error)
+            self.logMessage("commit() performing git commit\n" +error)
 
         # Git push
         result = Popen(['/usr/bin/git', 'push', 'origin', 'master'],stdout=PIPE,stderr=PIPE,shell=False)
         (out, error) = result.communicate()
         if len(out) > 1:
-            logMessage("commit() performing git push origin master \n" +out)
+            self.logMessage("commit() performing git push origin master \n" +out)
         if len(error) > 1:
-            logMessage("commit() performing git push origin master \n" +error)
+            self.logMessage("commit() performing git push origin master \n" +error)
         
         if error.find("Could not resolve hostname") != -1:
-                logError("No connection")
+            self.logError("No connection")
 
 
 
-    def smartPull(location,errLogFlile,logFileDir):
+    def smartPull(self):
 
-        os.chdir(location)
+        os.chdir(self.repoLocation)
         try:
             result = Popen(['/usr/bin/git', 'pull', 'origin', 'master'],stdout=PIPE,stderr=PIPE,shell=False)
             (out, error) = result.communicate()
             if len(out) > 1:
-                logMessage(logFileDir,"smartPull() performing git pull origin master \n" +out)
+                self.logMessage("smartPull() performing git pull origin master \n" +out)
             if len(error) > 1:
-                logMessage(logFileDir,"smartPull() performing git pull origin master \n" +error)
+                self.logMessage("smartPull() performing git pull origin master \n" +error)
 
             if error.find("Could not resolve hostname") != -1:
-                logError(errLogFlile,"No connection")
+                self.logError("No connection")
             
             if error.find("overwritten by merge") != -1:
-                mergeConflict(errLogFlile,logFileDir)
+                self.mergeConflict()
 
         except Exception as e:
-            logError(errLogFlile,e)
+            self.logError(e)
+
+    def run(self):
+        oldState = Popen("ls -pla " +self.repoLocation+ " | grep -v /",shell=True,stdout=PIPE).stdout.read()
+
+        while 1:
+            currentState = Popen("ls -pla " +self.repoLocation+ " | grep -v /",shell=True,stdout=PIPE).stdout.read()
+            if(currentState != oldState):
+                time.sleep(2)
+                self.smartPull()
+                self.commit()
+            oldState = currentState
+            time.sleep(self.pollPeriod)
 
 
 
 def main():
 
-    pollPeriod = 1
-    errLogFlile = sys.argv[1]
-    repoLocation = sys.argv[2]
-    logFileDir = sys.argv[3]
+    helper = BackupHelper(sys.argv[1],sys.argv[2],sys.argv[3],1)
 
-    # Check if there are any errors logged, send email if there are
-    clearLogFile(errLogFlile,logFileDir)
+    helper.clearLogFile()
 
-    smartPull(repoLocation,errLogFlile,logFileDir)
+    helper.smartPull()
 
     time.sleep(1)
 
-    # Get current state of directory without any hidden files
-    oldState = Popen("ls -pla " +repoLocation+ " | grep -v /",shell=True,stdout=PIPE).stdout.read()
+    helper.run()
 
-    while 1:
-        currentState = Popen("ls -pla " +repoLocation+ " | grep -v /",shell=True,stdout=PIPE).stdout.read()
-        if(currentState != oldState):
-            time.sleep(2)
-            smartPull(repoLocation,errLogFlile,logFileDir)
-            commit(repoLocation,errLogFlile,logFileDir)
-        oldState = currentState
-        time.sleep(pollPeriod)
 
 
 if __name__ == "__main__":
