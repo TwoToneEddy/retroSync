@@ -12,7 +12,7 @@ import smtplib
 
 
 class BackupHelper:
-    def __init__(self,errLogDir,repoLocation,logFileDir,pollPeriod):
+    def __init__(self,repoLocation,logFileDir,errLogDir,pollPeriod):
         self.repoLocation = repoLocation
         self.logFileDir = logFileDir
         self.pollPeriod = pollPeriod
@@ -184,9 +184,9 @@ class BackupHelper:
 
 
 # Args
-# 0 Error log file
-# 1 Repository location
-# 2 Path to log directory  
+# 0 Repository location
+# 1 Path to log directory 
+# 2 Path to error log directory
 def main():
 
     helper = BackupHelper(sys.argv[1],sys.argv[2],sys.argv[3],1)
