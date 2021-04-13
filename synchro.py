@@ -17,6 +17,7 @@ class BackupHelper:
         self.repoLocation = repoLocation
         self.logFileDir = logFileDir
         self.pollPeriod = pollPeriod
+        self.repoName = self.repoLocation.split('/')[-1]
 
     def logMessage(self,message):
         now = datetime.now()
