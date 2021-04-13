@@ -22,7 +22,7 @@ class BackupHelper:
         now = datetime.now()
         fileName = self.logFileDir+"/log_"+now.strftime("%d_%m_%Y") + ".txt"
         f = open(fileName, "a")
-        f.write(message + " " + os.uname()[1] + " " + now.strftime("%d/%m/%Y/ %H:%M:%S") + "\n")
+        f.write(os.uname()[1] + " " + now.strftime("%d/%m/%Y/ %H:%M:%S") + "\n" + "\t" +message)
         f.close()
 
 
@@ -43,7 +43,7 @@ class BackupHelper:
 
             server.sendmail("tim.smith361@yahoo.com","lee.hudson1384@gmail.com",message)
             server.quit()
-            self.logMessage("Email sent ")
+            self.logMessage("Email sent")
             return 0
         except:
             self.logError("Unable to send email")
@@ -82,7 +82,7 @@ class BackupHelper:
         # Now send email
         subject = os.uname()[1]+" Merge confict!!"
         message = "mergeConflict() called by " + os.uname()[1] + "\n"
-        message += mergeConflictBranch + " created and pushed\n"
+        message += mergeConflictBranch + " created and pushed\n"+"\t"
         message += "This means something had changed before a pull was done\n"
         self.sendEmail(subject,message)
 
@@ -97,25 +97,25 @@ class BackupHelper:
         result =  Popen(['/usr/bin/git', 'add', '*'],stdout=PIPE,stderr=PIPE,shell=False)
         (out, error) = result.communicate()
         if len(out) > 1:
-            self.logMessage("commit() performing git add *\n" +out)
+            self.logMessage("commit() performing git add *\n"+"\t" +out)
         if len(error) > 1:
-            self.logMessage("commit() performing git add *\n" +error)
+            self.logMessage("commit() performing git add *\n"+"\t" +error)
 
         # Git commit
         result = Popen(['/usr/bin/git', 'commit', '-m',mergeMessage],stdout=PIPE,stderr=PIPE,shell=False)
         (out, error) = result.communicate()
         if len(out) > 1:
-            self.logMessage("commit() performing git commit\n" +out)
+            self.logMessage("commit() performing git commit\n"+"\t" +out)
         if len(error) > 1:
-            self.logMessage("commit() performing git commit\n" +error)
+            self.logMessage("commit() performing git commit\n"+"\t" +error)
 
         # Git push
         result = Popen(['/usr/bin/git', 'push', 'origin', 'master'],stdout=PIPE,stderr=PIPE,shell=False)
         (out, error) = result.communicate()
         if len(out) > 1:
-            self.logMessage("commit() performing git push origin master \n" +out)
+            self.logMessage("commit() performing git push origin master \n"+"\t" +out)
         if len(error) > 1:
-            self.logMessage("commit() performing git push origin master \n" +error)
+            self.logMessage("commit() performing git push origin master \n"+"\t" +error)
         
         if error.find("Could not resolve hostname") != -1:
             self.logError("No connection")
@@ -129,37 +129,47 @@ class BackupHelper:
             result = Popen(['/usr/bin/git', 'pull', 'origin', 'master'],stdout=PIPE,stderr=PIPE,shell=False)
             (out, error) = result.communicate()
             if len(out) > 1:
-                self.logMessage("smartPull() performing git pull origin master \n" +out)
-            if len(error) > 1:
-                self.logMessage("smartPull() performing git pull origin master \n" +error)
+                self.logMessage("smartPull() performing git pull origin master \n" +"\t"+out)
+            else:
+                if len(error) > 1:
+                    self.logMessage("smartPull() performing git pull origin master \n"+"\t" +error)
+                
 
             if error.find("Could not resolve hostname") != -1:
                 self.logError("No connection")
             
             if error.find("overwritten by merge") != -1:
                 self.mergeConflict()
+            else:
+                # If we have succeeded in the pull it means we have a connection, clear the log file. 
+                self.clearLogFile()
 
         except Exception as e:
             self.logError(e)
 
     def run(self):
-        oldState = Popen("ls -pla " +self.repoLocation+ " | grep -v /",shell=True,stdout=PIPE).stdout.read()
-
-        while 1:
-            currentState = Popen("ls -pla " +self.repoLocation+ " | grep -v /",shell=True,stdout=PIPE).stdout.read()
-            if(currentState != oldState):
-                time.sleep(2)
+        
+        while(1):    
+            gitStatus = Popen(['/usr/bin/git', 'status', '-s'],stdout=PIPE,stderr=PIPE,shell=False)
+            (out, error) = gitStatus.communicate()
+            gitStatusLength = len(out)
+            if(gitStatusLength > 1):
+                time.sleep(1)
                 self.smartPull()
                 self.commit()
-            oldState = currentState
             time.sleep(self.pollPeriod)
 
 
 
+# Args
+# 0 Error log file
+# 1 Repository location
+# 2 Path to log directory  
 def main():
 
     helper = BackupHelper(sys.argv[1],sys.argv[2],sys.argv[3],1)
 
+    helper.logMessage("Device powered up\n")
     helper.clearLogFile()
 
     helper.smartPull()
