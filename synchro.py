@@ -65,7 +65,7 @@ class BackupHelper:
             if self.sendEmail(os.uname()[1]+" Logfile contents",message) == 0:
                 os.system("mv "+self.errLogFlile+" "+self.errLogFlile+"_"+now.strftime("%d_%m_%Y__%H_%M_%S"))
         except:
-            print "No log file \n"
+            return
 
 
     # If merge conflict we have to create a branch with the stuff that conflicts and deal with it later
