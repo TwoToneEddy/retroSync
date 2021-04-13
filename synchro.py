@@ -12,12 +12,12 @@ import smtplib
 
 
 class BackupHelper:
-    def __init__(self,errLogFlile,repoLocation,logFileDir,pollPeriod):
-        self.errLogFlile = errLogFlile
+    def __init__(self,errLogDir,repoLocation,logFileDir,pollPeriod):
         self.repoLocation = repoLocation
         self.logFileDir = logFileDir
         self.pollPeriod = pollPeriod
         self.repoName = self.repoLocation.split('/')[-1]
+        self.errLogFlile = errLogDir + "/" + self.repoName + "_err.txt"
 
     def logMessage(self,message):
         now = datetime.now()
@@ -88,7 +88,7 @@ class BackupHelper:
         message += "This means something had changed before a pull was done\n"
         self.sendEmail(subject,message)
 
-    # Basic commitlogFileDir
+    # Basic commit
     def commit(self):
 
         os.chdir(self.repoLocation)
