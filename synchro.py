@@ -50,7 +50,8 @@ class BackupHelper:
             return 1
 
 
-    # Moves logfile and sends email with contents
+    # If an error logfile exists send the contents of that file as an email.
+    # If the email suceeds then move the error log file.
     def clearLogFile(self):
         now = datetime.now()
         message = ""
@@ -118,13 +119,32 @@ class BackupHelper:
             self.logMessage("commit() performing git push origin master \n"+"\t" +error)
         
         if error.find("Could not resolve hostname") != -1:
-            self.logError("No connection")
+            self.logError("Git push failed in BackupHelper.commit(), no connection")
 
 
+    def push(self):
+
+        os.chdir(self.repoLocation)
+        success = False
+        try:
+            result = Popen(['/usr/bin/git', 'push', 'origin', 'master'],stdout=PIPE,stderr=PIPE,shell=False)
+            (out, error) = result.communicate()
+            if len(out) > 1:
+                self.logMessage("push() performing git push origin master \n"+"\t" +out)
+            if len(error) > 1:
+                self.logMessage("push() performing git push origin master \n"+"\t" +error)
+                
+
+            if error.find("Could not resolve hostname") != -1:
+                self.logError("Git push failed in BackupHelper.push(), no connection")
+                
+        except Exception as e:
+            self.logError(e)
 
     def smartPull(self):
 
         os.chdir(self.repoLocation)
+        success = False
         try:
             result = Popen(['/usr/bin/git', 'pull', 'origin', 'master'],stdout=PIPE,stderr=PIPE,shell=False)
             (out, error) = result.communicate()
@@ -136,13 +156,14 @@ class BackupHelper:
                 
 
             if error.find("Could not resolve hostname") != -1:
-                self.logError("No connection")
-            
+                self.logError("Git pull failed in BackupHelper.smartPull(), no connection")
+                return
+
             if error.find("overwritten by merge") != -1:
                 self.mergeConflict()
-            else:
-                # If we have succeeded in the pull it means we have a connection, clear the log file. 
-                self.clearLogFile()
+                
+            # If we have succeeded in the pull it means we have a connection, clear the log file. 
+            self.clearLogFile()
 
         except Exception as e:
             self.logError(e)
@@ -173,6 +194,7 @@ def main():
     helper.clearLogFile()
 
     helper.smartPull()
+    helper.push()
 
     time.sleep(1)
 
