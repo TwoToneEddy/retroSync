@@ -193,6 +193,7 @@ class BackupHelper:
 
             # Convert spaces for linux
             for index, change in enumerate(gitStatusOutputClean):
+                gitStatusOutputClean[index] = gitStatusOutputClean[index].replace('"','')
                 gitStatusOutputClean[index] = gitStatusOutputClean[index].replace(' ',"\\ ")
 
             # If the length of the git status list is > 0 after removing the bin
