@@ -183,7 +183,7 @@ class BackupHelper:
             # Go through and remove any bin files
 
             for index, change in enumerate(gitStatusOutput):
-                if change.find(".bin") != -1:
+                if change.find(".smc") != -1:
                     gitStatusOutput[index] = ''
             
             for change in gitStatusOutput:
@@ -206,7 +206,7 @@ class BackupHelper:
 # 2 Path to error log directory
 def main():
 
-    helper = BackupHelper(sys.argv[1],sys.argv[2],sys.argv[3],10)
+    helper = BackupHelper(sys.argv[1],sys.argv[2],sys.argv[3],2)
 
     helper.logMessage("Device powered up\n")
     helper.clearLogFile()
