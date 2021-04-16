@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
 #f = open("/home/lee/demofile2.txt", "a")
 #f.write("Now the file has more content!\n")
 #f.close()
@@ -206,15 +206,15 @@ class BackupHelper:
 # 2 Path to error log directory
 def main():
 
-    helper = BackupHelper(sys.argv[1],sys.argv[2],sys.argv[3],1)
+    helper = BackupHelper(sys.argv[1],sys.argv[2],sys.argv[3],10)
 
-    #helper.logMessage("Device powered up\n")
-    #helper.clearLogFile()
+    helper.logMessage("Device powered up\n")
+    helper.clearLogFile()
 
-    #helper.smartPull()
-    #helper.push()
+    helper.smartPull()
+    helper.push()
 
-    #time.sleep(1)
+    time.sleep(1)
 
     helper.run()
 
