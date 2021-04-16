@@ -89,19 +89,20 @@ class BackupHelper:
         self.sendEmail(subject,message)
 
     # Basic commit
-    def commit(self):
+    def commit(self, files):
 
         os.chdir(self.repoLocation)
 
         mergeMessage = "Auto commit " + os.uname()[1]
 
         # Git add
-        result =  Popen(['/usr/bin/git', 'add', '*'],stdout=PIPE,stderr=PIPE,shell=False)
-        (out, error) = result.communicate()
-        if len(out) > 1:
-            self.logMessage("commit() performing git add *\n"+"\t" +out)
-        if len(error) > 1:
-            self.logMessage("commit() performing git add *\n"+"\t" +error)
+        for file in files:
+            result =  Popen(['/usr/bin/git', 'add', file],stdout=PIPE,stderr=PIPE,shell=False)
+            (out, error) = result.communicate()
+            if len(out) > 1:
+                self.logMessage("commit() performing git add *\n"+"\t" +out)
+            if len(error) > 1:
+                self.logMessage("commit() performing git add *\n"+"\t" +error)
 
         # Git commit
         result = Popen(['/usr/bin/git', 'commit', '-m',mergeMessage],stdout=PIPE,stderr=PIPE,shell=False)
@@ -190,11 +191,11 @@ class BackupHelper:
                     gitStatusOutputClean.append(change[3:])
             # If the length of the git status list is > 0 after removing the bin
             # files then we have something we want
-            gitStatusLength = len(gitStatusOutput)
+            gitStatusLength = len(gitStatusOutputClean)
             if(gitStatusLength > 0):
                 time.sleep(1)
                 self.smartPull()
-                self.commit()
+                self.commit(gitStatusOutputClean)
             time.sleep(self.pollPeriod)
 
 
