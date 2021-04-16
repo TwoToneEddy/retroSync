@@ -170,12 +170,28 @@ class BackupHelper:
             self.logError(e)
 
     def run(self):
-        
+        os.chdir(self.repoLocation)
         while(1):    
             gitStatus = Popen(['/usr/bin/git', 'status', '-s'],stdout=PIPE,stderr=PIPE,shell=False)
             (out, error) = gitStatus.communicate()
-            gitStatusLength = len(out)
-            if(gitStatusLength > 1):
+
+            # Get a list from the git status command
+            gitStatusOutput = out.split('\n')
+            gitStatusOutput.pop()
+            gitStatusOutputClean = list()
+            # Go through and remove any bin files
+
+            for index, change in enumerate(gitStatusOutput):
+                if change.find(".bin") != -1:
+                    gitStatusOutput[index] = ''
+            
+            for change in gitStatusOutput:
+                if len(change) > 0:
+                    gitStatusOutputClean.append(change[3:])
+            # If the length of the git status list is > 0 after removing the bin
+            # files then we have something we want
+            gitStatusLength = len(gitStatusOutput)
+            if(gitStatusLength > 0):
                 time.sleep(1)
                 self.smartPull()
                 self.commit()
@@ -191,13 +207,13 @@ def main():
 
     helper = BackupHelper(sys.argv[1],sys.argv[2],sys.argv[3],1)
 
-    helper.logMessage("Device powered up\n")
-    helper.clearLogFile()
+    #helper.logMessage("Device powered up\n")
+    #helper.clearLogFile()
 
-    helper.smartPull()
-    helper.push()
+    #helper.smartPull()
+    #helper.push()
 
-    time.sleep(1)
+    #time.sleep(1)
 
     helper.run()
 
