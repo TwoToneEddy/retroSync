@@ -180,6 +180,7 @@ class BackupHelper:
             gitStatusOutput = out.split('\n')
             gitStatusOutput.pop()
             gitStatusOutputClean = list()
+            gitStatusOutputReallyClean = list()
             # Go through and remove any bin files
 
             for index, change in enumerate(gitStatusOutput):
@@ -189,6 +190,11 @@ class BackupHelper:
             for change in gitStatusOutput:
                 if len(change) > 0:
                     gitStatusOutputClean.append(change[3:])
+
+            # Convert spaces for linux
+            for index, change in enumerate(gitStatusOutputClean):
+                gitStatusOutputClean[index] = gitStatusOutputClean[index].replace(' ',"\\ ")
+
             # If the length of the git status list is > 0 after removing the bin
             # files then we have something we want
             gitStatusLength = len(gitStatusOutputClean)
