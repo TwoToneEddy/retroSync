@@ -213,7 +213,7 @@ class BackupHelper:
 # 2 Path to error log directory
 def main():
 
-    helper = BackupHelper(sys.argv[1],sys.argv[2],sys.argv[3],2)
+    helper = BackupHelper(sys.argv[1],sys.argv[2],sys.argv[3],5)
 
     helper.logMessage("Device powered up\n")
     helper.clearLogFile()
