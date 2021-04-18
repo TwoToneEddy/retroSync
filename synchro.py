@@ -9,7 +9,7 @@ import sys
 from subprocess import Popen, PIPE
 from datetime import datetime
 import smtplib
-
+import urllib2
 
 class BackupHelper:
     def __init__(self,repoLocation,logFileDir,errLogDir,pollPeriod):
@@ -206,7 +206,13 @@ class BackupHelper:
             time.sleep(self.pollPeriod)
 
 
-
+def wait_for_internet_connection():
+    while True:
+        try:
+            response = urllib2.urlopen('http://www.github.com',timeout=1)
+            return
+        except urllib2.URLError:
+            pass
 # Args
 # 0 Repository location
 # 1 Path to log directory 
@@ -215,8 +221,12 @@ def main():
 
     helper = BackupHelper(sys.argv[1],sys.argv[2],sys.argv[3],5)
 
-    helper.logMessage("Device powered up\n")
+    helper.logMessage("Device powered up, waiting for connection\n")
+    wait_for_internet_connection()
+    helper.logMessage("Connection successful\n")
+    
     helper.clearLogFile()
+
 
     helper.smartPull()
     helper.push()
