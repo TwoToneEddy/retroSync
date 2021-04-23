@@ -93,7 +93,7 @@ class BackupHelper:
 
         os.chdir(self.repoLocation)
 
-        mergeMessage = "Auto commit " + os.uname()[1]
+        mergeMessage = "Auto commit @TwoToneEddy " + os.uname()[1]
 
         # Git add
         for file in files:
